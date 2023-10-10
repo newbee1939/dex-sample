@@ -1,5 +1,9 @@
 # dex-sample
 
+DEX（分散型取引所）のサンプル
+
+# 手順
+
 0. 今は以下の二つが良さそう
    - hardhat
    - ethers.js
