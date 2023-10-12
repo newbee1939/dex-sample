@@ -23,6 +23,7 @@ contract UdexPool {
     function initialize(address _token0, address _token1) external {
         // 引っかかった場合は、revertが走って、それまでの処理がなかったことになる
         require(msg.sender == factory, 'UdexPool: initialization forbidden');
+
         token0 = _token0;
         token1 = _token1;
     }
