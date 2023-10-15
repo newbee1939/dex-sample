@@ -8,6 +8,8 @@ import './UdexPool.sol';
 contract UdexFactory {
     mapping(address => mapping(address => address)) public getPool;
 
+    event PoolCreated(address indexed token0, address indexed token1, address pool);
+
     function createPool(address tokenA, address tokenB) external returns (address pool) {
         require(tokenA != tokenB, 'UdexFactory: IDENTICAL_TOKEN_ADDRESS');
 
@@ -32,5 +34,8 @@ contract UdexFactory {
         // getPool変数にpoolのアドレスを登録する
         getPool[token0][token1] = pool;
         getPool[token1][token0] = pool;
+
+        // ログ出力
+        emit PoolCreated(token0, token1, pool);
     }
 }
