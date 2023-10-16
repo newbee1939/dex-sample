@@ -12,9 +12,11 @@ const TEST_ADDRESSES: [string, string] = [
 describe("UdexFactory", () => {
   async function deployFactoryFixture() {
     // UdexFactoryの情報を読み込む
-    const Factory = await ethers.getContractFactory("UdexFactory");
+    const Factory: ContractFactory = await ethers.getContractFactory(
+      "UdexFactory"
+    );
     // コントラクトをデプロイするというトランザクションの情報をイーサリアムネットワークに送る
-    const factory = await Factory.deploy();
+    const factory: Contract = await Factory.deploy();
     // コントラクトの情報がイーサリアム上に書き込まれたことを確認する
     await factory.deployed();
     return { factory };
@@ -34,6 +36,7 @@ describe("UdexFactory", () => {
     const tx = await factory.createPool(...TEST_ADDRESSES);
     // 処理中に発行されたEventはレシートに書き込まれる
     const receipt = await tx.wait();
-    const event = factory.interface.
+    const event = factory.interface.parseLog(receipt.logs[0]);
+    expect(event.name).to.eq("");
   });
 });
