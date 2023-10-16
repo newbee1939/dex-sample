@@ -2,6 +2,7 @@
 pragma solidity ^0.8.19;
 
 import './UdexPool.sol';
+import 'hardhat/console.sol';
 
 // 指定したトークン対のアドレスから流動性プールのコントラクトを次々デプロイしていく
 // デプロイされたFactoryコントラクトは唯一つ
@@ -37,5 +38,6 @@ contract UdexFactory {
 
         // ログ出力
         emit PoolCreated(token0, token1, pool);
+        console.log("[Hardhat Debug] pool created at", pool);
     }
 }
