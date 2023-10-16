@@ -21,9 +21,19 @@ describe("UdexFactory", () => {
   }
 
   it("get no pool address before creation", async () => {
-    const { factory } = await deployFactoryFixture();
+    const { factory } = await loadFixture(deployFactoryFixture);
     expect(await factory.getPool(...TEST_ADDRESSES)).to.eq(
       ethers.constants.AddressZero
     );
+  });
+
+  it("get pool address after creation", async () => {
+    const { factory } = await loadFixture(deployFactoryFixture);
+    // イーサリアムノードにトランザクションを送信する
+    // 戻り値としてpoolのアドレス値は返ってこない
+    const tx = await factory.createPool(...TEST_ADDRESSES);
+    // 処理中に発行されたEventはレシートに書き込まれる
+    const receipt = await tx.wait();
+    const event = factory.interface.
   });
 });
