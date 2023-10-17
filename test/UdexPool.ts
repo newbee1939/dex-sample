@@ -47,4 +47,21 @@ describe("UdexPool", () => {
       expect(await pool.token1()).to.eq(token1.address);
     });
   });
+
+  describe("initialize", () => {
+    it("not callable by user accounts", async function () {
+      const { account0, account1, account2, pool, token0, token1 } =
+        await loadFixture(deployPoolFixture);
+      // factory以外が呼び出すことはできない
+      await expect(
+        pool.connect(account0).initialize(token0.address, token1.address)
+      ).to.be.revertedWith("UdexPool: initialization forbidden");
+      await expect(
+        pool.connect(account1).initialize(token0.address, token1.address)
+      ).to.be.revertedWith("UdexPool: initialization forbidden");
+      await expect(
+        pool.connect(account2).initialize(token0.address, token1.address)
+      ).to.be.revertedWith("UdexPool: initialization forbidden");
+    });
+  });
 });
