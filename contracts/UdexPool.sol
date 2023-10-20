@@ -1,9 +1,17 @@
 // <UdexPoolをデプロイするコントラクト>
 // Poolコントラクトは、factoryコントラクトからデプロイする
+// 流動性Poolは、預けられたトークンペアに対して流動性トークンを発行する
+// -> 流動性トークン自体がERC20になっている
+// -> UdexPoolのコントラクトはERC20のコントラクトを継承して作られる
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-contract UdexPool {
+import './libraries/Math.sol';
+import './interfaces/IERC20.sol';
+import './UdexERC20.sol';
+
+// isで継承できる
+contract UdexPool is UdexERC20("Udex Token", "UDX", 18) {
     // これら3つはstate variables
     // immutable: 一度登録したら変更できない
     address immutable public factory; // PoolContractをデプロイしたFactoryコントラクトのアドレスを入れる
