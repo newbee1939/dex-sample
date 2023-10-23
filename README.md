@@ -41,3 +41,7 @@ DEX（分散型取引所）のサンプル
 # 資料
 
 - .png ファイル
+- 作成する DEX のデモと全体像
+  - https://www.udemy.com/course/web3dapps/learn/lecture/36128736#overview
+- 作成するコントラクトの概要
+  - https://www.udemy.com/course/web3dapps/learn/lecture/36130152#overview
