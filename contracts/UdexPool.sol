@@ -52,9 +52,23 @@ contract UdexPool is UdexERC20("Udex Token", "UDX", 18) {
         uint amount0 = balance0 - reserve0;
         uint amount1 = balance1 - reserve1;
 
-        // 初めてのデプロイ
+        // 初めてのmint。流動性プールが作られた時に実行される
         if (_totalSupply == 0) {
-            //
+            require(amount0 * amount1 > MINIMUM_LIQUIDITY * MINIMUM_LIQUIDITY, 'UdexPool: BELOW_MINIMUM_LIQUIDITY');
+            // toに送金される量
+            liquidity = Math.sqrt(amount0 * amount1) - MINIMUM_LIQUIDITY;
+            // MINIMUM_LIQUIDITYの分をaddress(0)に送ってロックする
+            // totalSupplyが0になることを完全に防いでいる
+            _mint(address(0), MINIMUM_LIQUIDITY);
+        } else {
+            liquidity = Math.min(amount0 * _totalSupply / reserve0, amount1 * _totalSupply / reserve1);
         }
+        require(liquidity > 0, 'UdexPool: INSUFFICIENT_LIQUIDITY_MINTED');
+        _mint(to, liquidity);
+
+        reserve0 = balance0;
+        reserve1 = balance1;
+        // mintを呼んだ人か呼んだコントラクトのアドレス
+        emit Mint(msg.sender, amount0, amount1);
     }
 }
