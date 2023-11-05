@@ -2,6 +2,13 @@
 
 DEX（分散型取引所）のサンプル
 
+# 概要
+
+- 作成する DEX のデモと全体像
+  - https://www.udemy.com/course/web3dapps/learn/lecture/36128736#overview
+- 作成するコントラクトの概要
+  - https://www.udemy.com/course/web3dapps/learn/lecture/36130152#overview
+
 # 手順
 
 0. 今は以下の二つが良さそう(Solidity の開発環境)
