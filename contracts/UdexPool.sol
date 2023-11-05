@@ -11,6 +11,7 @@ import './interfaces/IERC20.sol';
 import './UdexERC20.sol';
 
 // isで継承できる
+// UdexERC20コントラクトを継承しています。また、コントラクトの名前、シンボル、および小数点以下の桁数を指定して初期化
 contract UdexPool is UdexERC20("Udex Token", "UDX", 18) {
     uint public constant MINIMUM_LIQUIDITY = 10**3;
 
@@ -20,15 +21,19 @@ contract UdexPool is UdexERC20("Udex Token", "UDX", 18) {
     // このPoolに対応するTokenペアのアドレス
     address public token0;
     address public token1;
+    // この流動性プールが管理している2つのトークンのリザーブ（保有）量を記録する変数
     uint public reserve0;
     uint public reserve1;
 
+    // amount0： uint型のパラメータで、アクションによってトークン0（通常はベース通貨）が供給された量を表します。
+    // amount1： uint型のパラメータで、アクションによってトークン1が供給された量を表します。
     event Mint(address indexed sender, uint amount0, uint amount1);
 
     // コントラクトをデプロイするときに呼び出される
     // constructorに引数は渡したくない？
     constructor() {
         // factoryコントラクトのアドレスが入っている
+        // factoryからしか呼び出すことはないので
         factory = msg.sender;
     }
 
@@ -44,11 +49,20 @@ contract UdexPool is UdexERC20("Udex Token", "UDX", 18) {
 
     // liquidity: 発行された流動性トークンの量
     // 発行された流動性トークンがtoのアドレスに送られる
+    // 流動性トークンを発行する関数
+    // liquidity: 発行された流動性トークンの量
     function mint(address to ) external returns (uint liquidity) {
-        // 今この流動性プールが持っているtoken0の残高
+        // 今この流動性プールが持っているtoken0とtoken1の残高
+        //  IERC20 インターフェース（ERC-20トークンと対話するための共通の関数が定義されている）を使用しています。
+        // 括弧内に指定されたアドレス（token0）が表すERC-20トークンのインスタンスを作成します。これにより、そのトークンに定義された関数にアクセスできます
+        // address(this) は、コントラクト自体のアドレスを表します。つまり、このコントラクト自体のトークン残高を取得していることを示します
         uint balance0 = IERC20(token0).balanceOf(address(this));
         uint balance1 = IERC20(token1).balanceOf(address(this));
+
         // 直前に入金されたトークンの量
+        // トークンの残高の変化量を計算する
+        // amount0：トークン0の残高の変化量を示す変数です。balance0 は現在のトークン0の残高で、reserve0 は以前の残高を示します。
+        // したがって、amount0 は新しく供給されたトークン0の数量です。
         uint amount0 = balance0 - reserve0;
         uint amount1 = balance1 - reserve1;
 
@@ -56,6 +70,7 @@ contract UdexPool is UdexERC20("Udex Token", "UDX", 18) {
         if (_totalSupply == 0) {
             require(amount0 * amount1 > MINIMUM_LIQUIDITY * MINIMUM_LIQUIDITY, 'UdexPool: BELOW_MINIMUM_LIQUIDITY');
             // toに送金される量
+            // 新しく発行される流動性トークンの数量 liquidity
             liquidity = Math.sqrt(amount0 * amount1) - MINIMUM_LIQUIDITY;
             // MINIMUM_LIQUIDITYの分をaddress(0)に送ってロックする
             // totalSupplyが0になることを完全に防いでいる
