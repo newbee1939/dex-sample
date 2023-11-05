@@ -37,18 +37,20 @@ describe("UdexFactory", () => {
     );
   });
 
-  // ここから
+  // ここから。1行1行丁寧に理解する
   it("get pool address after creation", async () => {
     const { factory } = await loadFixture(deployFactoryFixture);
     // イーサリアムノードにトランザクションを送信する
     // 戻り値としてpoolのアドレス値は返ってこない
     const tx = await factory.createPool(...TEST_TOKEN_ADDRESSES);
     // 処理中に発行されたEventはレシートに書き込まれる
+    // トランザクションの処理を待ちます。Ethereumノードでトランザクションが確認された後、処理結果が「receipt」に格納されます
     const receipt = await tx.wait();
     const event = factory.interface.parseLog(receipt.logs[0]);
     expect(event.name).to.eq("PoolCreated");
     const poolAddress: string = event.args[2];
-    // poolのアドレスがmappingのstorgeに書き込まれたことをテスト
+    // poolのアドレスがmappingのstorgeに書き込まれたことをテスト！
+    // どちらの順番でも同じpoolアドレスが得られる
     expect(
       await factory.getPool(TEST_TOKEN_ADDRESSES[1], TEST_TOKEN_ADDRESSES[0])
     ).to.eq(poolAddress);
@@ -64,6 +66,7 @@ describe("UdexFactory", () => {
       TEST_TOKEN_ADDRESSES[0] < TEST_TOKEN_ADDRESSES[1]
         ? TEST_TOKEN_ADDRESSES
         : [TEST_TOKEN_ADDRESSES[0], TEST_TOKEN_ADDRESSES[1]];
+
     // デプロイアドレスを取得する
     const create2Address = getCreate2Address(
       factory.address,
