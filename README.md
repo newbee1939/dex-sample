@@ -26,6 +26,10 @@ DEX（分散型取引所）のサンプル
    - code test/UdexFactory.ts
 10. npx hardhat test で実行できる
 
+# アプリケーションの処理の流れ
+
+1.
+
 # メモ
 
 - UdexPool コントラクトの概要
