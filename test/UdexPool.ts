@@ -38,6 +38,26 @@ describe("UdexPool", () => {
     return { account0, account1, account2, factory, pool, token0, token1 };
   }
 
+  async function deployPoolAndMintFixture() {
+    // tokenA, tokenBがデプロイされ、factoryコントラクトがデプロイされ、poolコントラクトがデプロイされる
+    const { account0, account1, account2, factory, pool, token0, token1 } =
+      await loadFixture(deployPoolFixture);
+
+    // Mintする部分の処理
+    const token0Amount = 40000;
+    const token1Amount = 90000;
+    const liquidity = Math.sqrt(token0Amount * token1Amount);
+    // mintの前にtoken0をpoolにtransferする。送り手はアカウント0（何も書かなければaccount0が実行するのがhardhatの動き）
+    await token0.transfer(pool.address, token0Amount);
+    // mintの前にtoken1をpoolにtransferする。送り手はアカウント0
+    await token1.transfer(pool.address, token1Amount);
+
+    // Mintする。account1に流動性トークンが送られた状態
+    await pool.connect(account2).mint(account1.address);
+
+    return { account0, account1, account2, factory, pool, token0, token1 };
+  }
+
   describe("state variables", async () => {
     it("factory address", async () => {
       const { factory, pool } = await loadFixture(deployPoolFixture);
