@@ -28,6 +28,7 @@ contract UdexPool is UdexERC20("Udex Token", "UDX", 18) {
     // amount0： uint型のパラメータで、アクションによってトークン0（通常はベース通貨）が供給された量を表します。
     // amount1： uint型のパラメータで、アクションによってトークン1が供給された量を表します。
     event Mint(address indexed sender, uint amount0, uint amount1);
+    event Burn(address indexed sender, uint amount0, uint amount1, address indexed to);
 
     // コントラクトをデプロイするときに呼び出される
     // constructorに引数は渡したくない？
@@ -85,5 +86,40 @@ contract UdexPool is UdexERC20("Udex Token", "UDX", 18) {
         reserve1 = balance1;
         // mintを呼んだ人か呼んだコントラクトのアドレス
         emit Mint(msg.sender, amount0, amount1);
+    }
+
+    function burn(address to) external returns (uint amount0, uint amount1) {
+        IERC20 token0Contract = IERC20(token0);
+        IERC20 token1Contract = IERC20(token1);
+
+        // 流動性poolが今持っているtoken0の量を計算
+        uint balance0 = token0Contract.balanceOf(address(this));
+        uint balance1 = token1Contract.balanceOf(address(this));
+        // 今このコントラクトが持っているliquidityトークンの残高(burnされるliquidityトークンの量)
+        // burn関数が呼ばれる前に、poolに対してliquidityトークンが送られてきている
+        uint liquidity = _balances[address(this)];
+
+        // 引き出されるトークン0とトーク0ン1の量を計算
+        amount0 = liquidity * balance0 / _totalSupply;
+        amount1 = liquidity * balance1 / _totalSupply;
+
+        require(amount0 > 0 && amount1 > 0, 'UdexPool: INSUFFICIENT_LIQUIDITY_BURNED');
+        
+        // 現在のスマートコントラクトのアドレスに対して liquidity という量のトークンを「燃やす」（burn）操作が行われます
+        _burn(address(this), liquidity);
+
+        // tokenをtoのアドレスに出金
+        bool success0 = token0Contract.transfer(to, amount0);
+        // 何らかの理由で送金できなかったらburn自体が無効になる
+        require(success0, 'UdexPool: TOKEN0_TRANSFER_FAILED');
+        // Successコードについて、trueが返ってきてもtransferできていない可能性はあるが
+        // 価値が付くようなまともなトークンなら大丈夫 
+        bool success1 = token1Contract.transfer(to, amount1);
+        require(success1, 'UdexPool: TOKEN1_TRANSFER_FAILED');
+
+        // address(this)は現在のスマートコントラクトのアドレスを表す特殊なキーワード
+        reserve0 = token0Contract.balanceOf(address(this));
+        reserve1 = token1Contract.balanceOf(address(this));
+        emit Burn(msg.sender, amount0, amount1, to);
     }
 }
