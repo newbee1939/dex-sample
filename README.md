@@ -56,3 +56,10 @@ DEX（分散型取引所）のサンプルアプリケーション
   - https://www.udemy.com/course/web3dapps/learn/lecture/36128736#overview
 - 作成するコントラクトの概要
   - https://www.udemy.com/course/web3dapps/learn/lecture/36130152#overview
+
+# タスク
+
+- 全てのコードを理解する
+- 色々コードを変えてみて挙動を確かめる
+
+# その他

@@ -156,4 +156,16 @@ describe("UdexPool", () => {
       ).to.be.revertedWith("UdexPool: INSUFFICIENT_LIQUIDITY_MINTED");
     });
   });
+
+  describe("burn", () => {
+    it("burn all liquidity from account1", async () => {
+      const { account0, account1, account2, factory, pool, token0, token1 } =
+        await loadFixture(deployPoolAndMintFixture);
+      // この時点ではまだ流動性トークンは流動性プールに送られていない
+
+      // account1に流動性トークンが送られている状態なので、account1にconnectしてburnする
+      // account1の流動性トークンの残高が0になっていることを確認する
+      pool.connect(account1).burn(account1);
+    });
+  });
 });
