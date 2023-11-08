@@ -9,7 +9,7 @@ DEX（分散型取引所）のサンプルアプリケーション
 - 作成するコントラクトの概要
   - https://www.udemy.com/course/web3dapps/learn/lecture/36130152#overview
 
-# 手順
+# 開発手順
 
 0. 今は以下の二つが良いらしい(Solidity の開発環境)
    - hardhat

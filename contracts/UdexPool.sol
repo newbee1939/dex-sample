@@ -106,6 +106,7 @@ contract UdexPool is UdexERC20("Udex Token", "UDX", 18) {
         require(amount0 > 0 && amount1 > 0, 'UdexPool: INSUFFICIENT_LIQUIDITY_BURNED');
         
         // 現在のスマートコントラクトのアドレスに対して liquidity という量のトークンを「燃やす」（burn）操作が行われます
+        // 個別のaccountが持っていたのをburnしてaddress(this)に送る？
         _burn(address(this), liquidity);
 
         // tokenをtoのアドレスに出金

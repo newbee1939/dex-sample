@@ -161,11 +161,44 @@ describe("UdexPool", () => {
     it("burn all liquidity from account1", async () => {
       const { account0, account1, account2, factory, pool, token0, token1 } =
         await loadFixture(deployPoolAndMintFixture);
-      // この時点ではまだ流動性トークンは流動性プールに送られていない
 
-      // account1に流動性トークンが送られている状態なので、account1にconnectしてburnする
-      // account1の流動性トークンの残高が0になっていることを確認する
-      pool.connect(account1).burn(account1);
+      // この時点ではまだ流動性トークンは流動性プールに送られていない
+      // deployPoolAndMintFixtureでaccount1に流動性トークンが送られた状態になっている
+      // burnすることで、流動性トークンは流動性プールに送信される
+      expect(await pool.balanceOf(pool.address)).to.eq(0);
+
+      // 今現在account1が持ってい流動性トークンの量(burnされるトークンの量)
+      const liquidity1 = await pool.balanceOf(account1.address);
+      // このテストでは、burnで得られるtoken0とtoken1の量を確認したいので、事前に計算しておく
+      // 流動性トークンのtotalSupply
+      const totalSupply = await pool.totalSupply();
+      const balance0 = await pool.reserve0();
+      const balance1 = await pool.reserve1();
+      // liquidity1とかは、Big Numberという、ethersが用意している整数型になっている
+      // そのため普通の*や/は使用できない
+      const amount0 = balance0.mul(liquidity1).div(totalSupply);
+      const amount1 = balance1.mul(liquidity1).div(totalSupply);
+      // poolのコントラクトに、流動性トークンを送金する
+      await pool.connect(account1).transfer(pool.address, liquidity1);
+
+      // burnを呼ぶのは誰でもいい。account2にtoken0と1を引き出す
+      await expect(pool.connect(account0).burn(account2.address))
+        .to.emit(pool, "Burn")
+        .withArgs(account0.address, amount0, amount1, account2.address);
+      expect(await pool.balanceOf(pool.address)).to.eq(0);
+      expect(await token0.balanceOf(account2.address)).to.eq(amount0);
+      expect(await token1.balanceOf(account2.address)).to.eq(amount1);
+    });
+
+    // liquidity tokenの入金がなかった場合に、burn関数を呼ぶとrevertすることをテスト
+    it("burn fails without liquidity token in pool", async () => {
+      const { account0, account1, account2, factory, pool, token0, token1 } =
+        await loadFixture(deployPoolAndMintFixture);
+
+      expect(await pool.balanceOf(pool.address)).to.eq(0);
+      await expect(
+        pool.connect(account0).burn(account2.address)
+      ).to.be.revertedWith("UdexPool: INSUFFICIENT_LIQUIDITY_BURNED");
     });
   });
 });
