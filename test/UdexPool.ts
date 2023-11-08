@@ -2,8 +2,6 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import UdexPool from "../artifacts/contracts/UdexPool.sol/UdexPool.json";
-import { ContractFactory, Contract } from "ethers";
-import { getCreate2Address } from "./lib/utilities";
 
 // 10の三乗
 const MINIMUM_LIQUIDITY = 10 ** 3;
@@ -46,7 +44,6 @@ describe("UdexPool", () => {
     // Mintする部分の処理
     const token0Amount = 40000;
     const token1Amount = 90000;
-    const liquidity = Math.sqrt(token0Amount * token1Amount);
     // mintの前にtoken0をpoolにtransferする。送り手はアカウント0（何も書かなければaccount0が実行するのがhardhatの動き）
     await token0.transfer(pool.address, token0Amount);
     // mintの前にtoken1をpoolにtransferする。送り手はアカウント0
@@ -129,8 +126,9 @@ describe("UdexPool", () => {
 
     // 最初にmint関数が呼ばれた時に預け入れられたトークンの量があまりに少ないとrevertする
     it("mint reverted for insufficient initial deposit", async function () {
-      const { account0, account1, account2, pool, token0, token1 } =
-        await loadFixture(deployPoolFixture);
+      const { account1, account2, pool, token0, token1 } = await loadFixture(
+        deployPoolFixture
+      );
       const token0Amount = 999;
       const token1Amount = 999;
       await token0.transfer(pool.address, token0Amount);
@@ -142,8 +140,9 @@ describe("UdexPool", () => {
 
     // tokenの入金がない状態でmintを呼んでrevertするか
     it("second mint reverted for insufficient deposit", async function () {
-      const { account0, account1, account2, pool, token0, token1 } =
-        await loadFixture(deployPoolFixture);
+      const { account1, account2, pool, token0, token1 } = await loadFixture(
+        deployPoolFixture
+      );
       const token0Amount = 40000;
       const token1Amount = 90000;
       const liquidity = Math.sqrt(token0Amount * token1Amount);
@@ -159,7 +158,7 @@ describe("UdexPool", () => {
 
   describe("burn", () => {
     it("burn all liquidity from account1", async () => {
-      const { account0, account1, account2, factory, pool, token0, token1 } =
+      const { account0, account1, account2, pool, token0, token1 } =
         await loadFixture(deployPoolAndMintFixture);
 
       // この時点ではまだ流動性トークンは流動性プールに送られていない
@@ -192,8 +191,9 @@ describe("UdexPool", () => {
 
     // liquidity tokenの入金がなかった場合に、burn関数を呼ぶとrevertすることをテスト
     it("burn fails without liquidity token in pool", async () => {
-      const { account0, account1, account2, factory, pool, token0, token1 } =
-        await loadFixture(deployPoolAndMintFixture);
+      const { account0, account2, pool } = await loadFixture(
+        deployPoolAndMintFixture
+      );
 
       expect(await pool.balanceOf(pool.address)).to.eq(0);
       await expect(
