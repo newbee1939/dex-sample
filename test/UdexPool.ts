@@ -163,7 +163,7 @@ describe("UdexPool", () => {
 
       // この時点ではまだ流動性トークンは流動性プールに送られていない
       // deployPoolAndMintFixtureでaccount1に流動性トークンが送られた状態になっている
-      // burnすることで、流動性トークンは流動性プールに送信される
+      // burnすることで、流動性トークンは流動性プールに送信される？
       expect(await pool.balanceOf(pool.address)).to.eq(0);
 
       // 今現在account1が持ってい流動性トークンの量(burnされるトークンの量)
