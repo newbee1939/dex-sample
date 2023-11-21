@@ -99,7 +99,7 @@ contract UdexPool is UdexERC20("Udex Token", "UDX", 18) {
         // burn関数が呼ばれる前に、poolに対してliquidityトークンが送られてきている
         uint liquidity = _balances[address(this)];
 
-        // 引き出されるトークン0とトーク0ン1の量を計算
+        // 引き出されるトークン0とトークン1の量を計算
         amount0 = liquidity * balance0 / _totalSupply;
         amount1 = liquidity * balance1 / _totalSupply;
 
