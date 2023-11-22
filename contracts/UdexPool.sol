@@ -29,6 +29,17 @@ contract UdexPool is UdexERC20("Udex Token", "UDX", 18) {
     // amount1： uint型のパラメータで、アクションによってトークン1が供給された量を表します。
     event Mint(address indexed sender, uint amount0, uint amount1);
     event Burn(address indexed sender, uint amount0, uint amount1, address indexed to);
+    // token0が入ってきてtoken1が出る or token1が入ってきてtoken0が出る の二つのパターンがある
+    // どちらでも対応できるように4つ並べてる　
+    // toはSwapした後のトークンの送り先
+    event Swap(
+        address indexed sender, 
+        uint amount0In,
+        uint amount1In,
+        uint amount0Out,
+        uint amount1Out,
+        address indexed to  
+    );
 
     // コントラクトをデプロイするときに呼び出される
     // constructorに引数は渡したくない？
@@ -122,5 +133,55 @@ contract UdexPool is UdexERC20("Udex Token", "UDX", 18) {
         reserve0 = token0Contract.balanceOf(address(this));
         reserve1 = token1Contract.balanceOf(address(this));
         emit Burn(msg.sender, amount0, amount1, to);
+    }
+
+    // swapはDEXのユーザーがトークンを交換するときに呼ばれる機能
+    // amount0Outが出金額でamount1Outが0 or amount1Outが0でamount0Outが出金額 のいずれか
+    function swap(uint amount0Out, uint amount1Out, address to) external {
+        require(amount0Out > 0 || amount1Out > 0, 'UdexPool: INSUFFICIENT_OUTPUT_AMOUNT');
+        // 出金額は今プールに入っている額より小さくないとだめ
+        require(amount0Out < reserve0 && amount1Out < reserve1, 'UdexPool: INSUFFICIENT_LIQUIDITY');
+        // トークンの送付先はトークンのアドレスではない
+        require(to != token0 && to != token1, 'UdexPool: INVALID_TO');
+
+        // 流動性プールにあるトークンの残高を計算
+        // 入金されるトークンはswap関数が呼ばれる前にpoolコントラクトに送られている
+        // swapして出金した後に流動性プールに十分な量のトークンが残っていればOKとする
+        // なので、最初にトークンを出金してしまう
+        uint balance0;
+        uint balance1;
+        // インターフェースでアドレスを包むことにより、コントラクトを呼ぶことができる
+        // この括弧は変数名の局所的なスコープを定めている
+        // この中で宣言されたtoken0Contractのような変数はスコープの外では見えない
+        // Solidityでは一度に16個の変数しか作れないのでこういう書き方が必要
+        {
+            IERC20 token0Contract = IERC20(token0);
+            IERC20 token1Contract = IERC20(token1);
+            if (amount0Out > 0) {
+                bool success0 = token0Contract.transfer(to, amount0Out);
+                require(success0, 'UdexPool: TOKEN0_TRANSFER_FAILED');
+            } 
+            if (amount0Out > 0) {
+                bool success1 = token0Contract.transfer(to, amount1Out);
+                require(success1, 'UdexPool: TOKEN1_TRANSFER_FAILED');
+            } 
+            // この状態で流動性プールに残っているトークンの量
+            balance0 = token0Contract.balanceOf(address(this));
+            balance1 = token1Contract.balanceOf(address(this));
+        }
+
+        // 手数料を計算するために、入金額を手持ちの値から計算する
+        uint amount0In = balance0 > reserve0 - amount0Out ? balance0 - (reserve0 - amount0Out) : 0;
+        uint amount1In = balance1 > reserve1 - amount1Out ? balance1 - (reserve1 - amount1Out) : 0;
+        require(amount0In > 0 || amount1In > 0, 'UdexPool: INSUFFICIENT_INPUT_AMOUNT');
+
+        // fee 0.3%
+        uint balance0Adjusted = (balance0 * 1000) - (amount0In * 3);
+        uint balance1Adjusted = (balance1 * 1000) - (amount1In * 3);
+        require(balance0Adjusted * balance1Adjusted >= reserve0 * reserve1 * 1000**2, 'UdexPool: K');
+
+        reserve0 = balance0;
+        reserve1 = balance1;
+        emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);
     }
 }
